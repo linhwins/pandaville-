@@ -18,9 +18,9 @@ window.onload = function() {
     function preload() {
         // Load an image and call it 'logo'.
         game.load.image( 'bambooscreen', 'assets/bamboo1.jpg' ); //load background 
-        //game.load.spritesheet('panda', 'assets/pandasprites1.gif', 29, 30); //load panda sprite
         game.load.spritesheet('panda', 'assets/pandasprites11test.png', 120, 122); //load panda sprite
         game.load.image('coin', 'assets/pandacoin.png'); //load coin 
+        game.load.image('ground','assets/grassplatform2.png');
     }
     
     //var bouncy;
@@ -33,13 +33,20 @@ window.onload = function() {
     var jumpButton;
     var yAxis = p2.vec2.fromValues(0, 1);
     var coins;
+    var platforms;
 
     
     function create() {
+        
+        game.physics.startSystem(Phaser.Physics.ARCADE);
+        
+        
+        
+        
         // Create a sprite at the center of the screen using the 'logo' image.
         /////bouncy = game.add.sprite( game.world.centerX, game.world.centerY, 'logo' );
-        ////bkgr = game.add.tileSprite(0, 0, 2000, 2000, 'bambooscreen'); 
-        game.add.sprite(0,0,'bambooscreen');
+        bkgr = game.add.tileSprite(0, 0, 2000, 2000, 'bambooscreen'); 
+        //game.add.sprite(0,0,'bambooscreen');
         //game.add.sprite(0,0,'coin');
         // Anchor the sprite at its center, as opposed to its top-left corner.
         // so it will be truly centered.
@@ -50,35 +57,73 @@ window.onload = function() {
         // Make it bounce off of the world bounds.
         ////////////bouncy.body.collideWorldBounds = true;
         
-         game.physics.startSystem(Phaser.Physics.P2JS);
-         game.physics.startSystem(Phaser.Physics.ARCADE);
+        
+        
+        //  The platforms group contains the ground and the 2 ledges we can jump on
+    platforms = game.add.group();
 
-        game.physics.p2.gravity.y = 350;
-        game.physics.p2.world.defaultContactMaterial.friction = 0.3;
-        game.physics.p2.world.setGlobalStiffness(1e5);
+    //  We will enable physics for any object that is created in this group
+    platforms.enableBody = true;
+
+    // Here we create the ground.
+    var ground = platforms.create(0, game.world.height - 20, 'ground');  //70
+
+    //  Scale it to fit the width of the game (the original sprite is 400x32 in size)
+    ground.scale.setTo(2, 2);
+
+    //  This stops it from falling away when you jump on it
+    ground.body.immovable = true;
+
+    //  Now let's create two ledges
+    //var ledge = platforms.create(500, 400, 'ground');
+    var ledge = platforms.create(500, 400, 'ground');
+
+    ledge.body.immovable = true;
+
+    //ledge = platforms.create(-150, 250, 'ground');
+    ledge = platforms.create(-150, 250, 'ground');
+
+    ledge.body.immovable = true;
+  
+    ledge = platforms.create(550, 150, 'ground');
+
+    ledge.body.immovable = true;
+        
+        
+        
+        //game.physics.startSystem(Phaser.Physics.P2JS);
+        //game.physics.startSystem(Phaser.Physics.ARCADE);
+
+        //game.physics.p2.gravity.y = 350;
+        //game.physics.p2.world.defaultContactMaterial.friction = 0.3;
+        //game.physics.p2.world.setGlobalStiffness(1e5);
         
         
         //Add a sprite
         //player = game.add.sprite(50, game.world.height - 300, 'panda');
         player = game.add.sprite(200,200,'panda');
+        game.physics.arcade.enable(player);
+        player.body.bounce.y = 0.2;
+        player.body.gravity.y = 300;
+        player.body.collideWorldBounds = true; 
         player.animations.add('left', [2], 10, true);
         player.animations.add('turn', [1], 20, true);
         player.animations.add('right', [1], 10, true);
         
         
         //  Enable if for physics. This creates a default rectangular body.
-        game.physics.p2.enable(player);
-    
-        player.body.fixedRotation = true;
-        player.body.damping = 0.5;
-
-        var spriteMaterial = game.physics.p2.createMaterial('spriteMaterial', player.body);
-        var worldMaterial = game.physics.p2.createMaterial('worldMaterial');
-        var boxMaterial = game.physics.p2.createMaterial('worldMaterial');
+        //game.physics.p2.enable(player);
+    //
+        //player.body.fixedRotation = true;
+        //player.body.damping = 0.5;
+        //player.body.collideWorldBounds = true;
+        //var spriteMaterial = game.physics.p2.createMaterial('spriteMaterial', player.body);
+        //var worldMaterial = game.physics.p2.createMaterial('worldMaterial');
+        //var boxMaterial = game.physics.p2.createMaterial('worldMaterial');
         
-        game.physics.p2.setWorldMaterial(worldMaterial, true, true, true, true);
+        //game.physics.p2.setWorldMaterial(worldMaterial, true, true, true, true);
         
-        text = game.add.text(200, 100, 'move with arrow, space to jump', { fill: '#190718' });
+        //text = game.add.text(200, 100, 'move panda with arrow', { fill: '#190718' });
 
         cursors = game.input.keyboard.createCursorKeys();
         jumpButton = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
@@ -95,17 +140,18 @@ window.onload = function() {
         coins.enableBody = true;
         
         //  Here we'll create 12 of them evenly spaced apart
-        for (var i = 0; i < 12; i++)
+        for (var i = 0; i < 16; i++)
         {
         //  Create a star inside of the 'stars' group
         var coin = coins.create(i * 70, 0, 'coin');
 
         //  Let gravity do its thing
-        coin.body.gravity.y = 6;
+        coin.body.gravity.y = 4;
 
         //  This just gives each star a slightly random bounce value
         coin.body.bounce.y = 0.4 + Math.random() * 0.2;
         }
+        
 
         }
     
@@ -116,62 +162,55 @@ window.onload = function() {
         }
     
     function update() {
+        game.physics.arcade.collide(player, platforms);
+        game.physics.arcade.collide(coins, platforms);
         game.physics.arcade.overlap(player, coins, collectCoin, null, this);
         // Accelerate the 'logo' sprite towards the cursor,
         // accelerating at 500 pixels/second and moving no faster than 500 pixels/second
         // in X or Y.
         // This function returns the rotation angle that makes it visually match its
         // new trajectory.
-        //////bouncy.rotation = game.physics.arcade.accelerateToPointer( bouncy, this.game.input.activePointer, 500, 500, 500 );
-        if (cursors.left.isDown)
-    {
-        player.body.moveLeft(200);
+        //////bouncy.rotation = game.physics.arcade.accelerateToPointer( bouncy, this.game.input.activePointer, 500, 500, 500 )
+        
+        
+        
+        player.body.velocity.x = 0;
 
-        if (facing != 'left')
-        {
-            player.animations.play('left');
-            facing = 'left';
-        }
+    if (cursors.left.isDown)
+    {
+        //  Move to the left
+        player.body.velocity.x = -150;
+
+        player.animations.play('left');
     }
     else if (cursors.right.isDown)
     {
-        player.body.moveRight(200);
+        //  Move to the right
+        player.body.velocity.x = 150;
 
-        if (facing != 'right')
-        {
-            player.animations.play('right');
-            facing = 'right';
-        }
+        player.animations.play('right');
     }
     else
     {
-        player.body.velocity.x = 0;
+        //  Stand still
+        player.animations.stop();
 
-        if (facing != 'idle')
-        {
-            player.animations.stop();
-
-            if (facing == 'left')
-            {
-                player.frame = 0;
-            }
-            else
-            {
-                player.frame = 5;
-            }
-
-            facing = 'idle';
-        }
+        player.frame = 4;
     }
-    
-    if (jumpButton.isDown && game.time.now > jumpTimer && checkIfCanJump())
+
+    //  Allow the player to jump if they are touching the ground.
+    if (cursors.up.isDown && player.body.touching.down)
     {
-        player.body.moveUp(800);
-        jumpTimer = game.time.now + 750;
+        player.body.velocity.y = -399;
     }
+        
+        
+        
+        
+        
     }
     
-    function checkIfCanJump() {
+    /*function checkIfCanJump() {
 
     var result = false;
 
@@ -197,5 +236,5 @@ window.onload = function() {
     
     return result;
 
-}
+}*/
 };
