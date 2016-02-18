@@ -21,6 +21,7 @@ window.onload = function() {
         game.load.spritesheet('panda', 'assets/pandasprites11test.png', 120, 122); //load panda sprite
         game.load.image('coin', 'assets/pandacoin.png'); //load coin 
         game.load.image('ground','assets/grassplatform2.png');
+        game.load.audio('track','assets/track1.mp3');
     }
     
     //var bouncy;
@@ -34,10 +35,11 @@ window.onload = function() {
     var yAxis = p2.vec2.fromValues(0, 1);
     var coins;
     var platforms;
+    var music; 
 
     
     function create() {
-        
+        music = game.sound.play('track'); //added music here
         game.physics.startSystem(Phaser.Physics.ARCADE);
         
         
